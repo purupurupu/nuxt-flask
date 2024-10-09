@@ -1,17 +1,32 @@
-from flask import Flask, jsonify
+from flask import Flask
+from api.routes import api_bp
+from config import Config
 
-app = Flask(__name__)
 
-# health check
-@app.route('/')
-def hello():
-    return jsonify({"message": "Welcome to the API"})
+def create_app(config_class=Config):
+    app = Flask(__name__)
+    app.config.from_object(config_class)
 
-# ChatGPT API
-@app.route('/chat', methods=['POST'])
-def chat():
-    #TODO: ChatGPT APIを呼び出す
-    return True
+    # Blueprintの登録
+    app.register_blueprint(api_bp, url_prefix="/api")
 
-if __name__ == '__main__':
+    # ヘルスチェック用ルート
+    @app.route("/")
+    def hello():
+        return {"message": "Welcome to the API"}
+
+    # エラーハンドリング
+    @app.errorhandler(404)
+    def not_found(error):
+        return {"error": "Not found"}, 404
+
+    @app.errorhandler(500)
+    def internal_error(error):
+        return {"error": "Internal server error"}, 500
+
+    return app
+
+
+if __name__ == "__main__":
+    app = create_app()
     app.run(debug=True)
