@@ -1,0 +1,7 @@
+# プロジェクト全体の.gitignore
+.DS_Store
+*.log
+*.pyc
+__pycache__/
+.vscode/
+.idea/
