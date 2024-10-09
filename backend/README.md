@@ -1,23 +1,5 @@
 # README
 
-## 環境構築メモ
-
-仮装環境
-
-```
-python -m venv venv
-```
-
-```
-pip install -r requirements.txt
-```
-
-```
-flask --app app run
-```
-
-## バックエンドアプリケーション
-
 ## セットアップ
 
 1. 仮想環境を作成し、アクティベートします：
