@@ -1,32 +1,78 @@
-from flask import Flask
-from api.routes import api_bp
-from config import Config
+from flask import Flask, request, jsonify, send_file
+from flask_cors import CORS
+import openai
+
+# 追加インポート
+from google.cloud import speech_v1p1beta1 as speech
+from google.cloud import texttospeech
+import io
+
+app = Flask(__name__)
+CORS(app)
+
+# OpenAIのAPIキーを設定
+openai.api_key = "YOUR_OPENAI_API_KEY"
+
+# Google Cloudのクライアントを初期化
+speech_client = speech.SpeechClient()
+tts_client = texttospeech.TextToSpeechClient()
 
 
-def create_app(config_class=Config):
-    app = Flask(__name__)
-    app.config.from_object(config_class)
+@app.route("/process_audio", methods=["POST"])
+def process_audio():
+    audio_file = request.files.get("audio")
+    if not audio_file:
+        return jsonify({"error": "音声ファイルが見つかりません"}), 400
 
-    # Blueprintの登録
-    app.register_blueprint(api_bp, url_prefix="/api")
+    audio_content = audio_file.read()
 
-    # ヘルスチェック用ルート
-    @app.route("/")
-    def hello():
-        return {"message": "Welcome to the API"}
+    # Speech-to-Textの設定
+    audio = speech.RecognitionAudio(content=audio_content)
+    config = speech.RecognitionConfig(
+        encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
+        language_code="ja-JP",
+    )
 
-    # エラーハンドリング
-    @app.errorhandler(404)
-    def not_found(error):
-        return {"error": "Not found"}, 404
+    # 音声をテキストに変換
+    response = speech_client.recognize(config=config, audio=audio)
 
-    @app.errorhandler(500)
-    def internal_error(error):
-        return {"error": "Internal server error"}, 500
+    if not response.results:
+        return jsonify({"error": "音声を認識できませんでした"}), 400
 
-    return app
+    text = response.results[0].alternatives[0].transcript
+
+    # GPTを使ってテキストを正規化
+    prompt = f"次のオーダーを飲食店のメニューに基づいて正規化してください：{text}"
+    gpt_response = openai.Completion.create(
+        engine="text-davinci-003",
+        prompt=prompt,
+        max_tokens=100,
+        temperature=0.5,
+    )
+
+    normalized_text = gpt_response.choices[0].text.strip()
+
+    # Text-to-Speechの設定
+    synthesis_input = texttospeech.SynthesisInput(text=normalized_text)
+    voice = texttospeech.VoiceSelectionParams(
+        language_code="ja-JP", ssml_gender=texttospeech.SsmlVoiceGender.NEUTRAL
+    )
+    audio_config = texttospeech.AudioConfig(
+        audio_encoding=texttospeech.AudioEncoding.WAV
+    )
+
+    # 音声データを生成
+    tts_response = tts_client.synthesize_speech(
+        input=synthesis_input, voice=voice, audio_config=audio_config
+    )
+
+    return send_file(
+        io.BytesIO(tts_response.audio_content),
+        mimetype="audio/wav",
+        as_attachment=False,
+        attachment_filename="output.wav",
+    )
 
 
 if __name__ == "__main__":
-    app = create_app()
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000)
