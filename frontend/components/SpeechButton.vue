@@ -44,7 +44,11 @@ const startRecognition = () => {
 
       mediaRecorder.onstop = () => {
         const audioBlob = new Blob(audioChunks, { type: 'audio/wav' })
-        sendAudio(audioBlob)
+        // for debug
+        audioUrl.value = URL.createObjectURL(audioBlob)
+
+        // TODO: GoogleAPI用の実装
+        // sendAudio(audioBlob)
       }
 
       mediaRecorder.start()
@@ -61,35 +65,36 @@ const stopRecognition = () => {
   }
 }
 
-const sendAudio = async (audioBlob) => {
-  const formData = new FormData()
-  formData.append('audio', audioBlob, 'recording.wav')
+// TODO: GoogleAPI用の実装
+// const sendAudio = async (audioBlob) => {
+//   const formData = new FormData()
+//   formData.append('audio', audioBlob, 'recording.wav')
 
-  try {
-    // エンドポイントURLを /api/process_audio に変更
-    const response = await fetch('http://YOUR_BACKEND_URL:5000/api/process_audio', {
-      method: 'POST',
-      body: formData,
-    })
+//   try {
+//     // エンドポイントURLを /api/process_audio に変更
+//     const response = await fetch('http://YOUR_BACKEND_URL:5000/api/process_audio', {
+//       method: 'POST',
+//       body: formData,
+//     })
 
-    if (!response.ok) {
-      const errorData = await response.json()
-      console.error('バックエンドエラー：', errorData.error)
-      return
-    }
+//     if (!response.ok) {
+//       const errorData = await response.json()
+//       console.error('バックエンドエラー：', errorData.error)
+//       return
+//     }
 
-    const blob = await response.blob()
-    audioUrl.value = URL.createObjectURL(blob)
-    playAudio()
-  } catch (error) {
-    console.error('音声送信エラー：', error)
-  }
-}
+//     const blob = await response.blob()
+//     audioUrl.value = URL.createObjectURL(blob)
+//     playAudio()
+//   } catch (error) {
+//     console.error('音声送信エラー：', error)
+//   }
+// }
 
-const playAudio = () => {
-  const audio = new Audio(audioUrl.value)
-  audio.play()
-}
+// const playAudio = () => {
+//   const audio = new Audio(audioUrl.value)
+//   audio.play()
+// }
 </script>
 
 <style scoped>
