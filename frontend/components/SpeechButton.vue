@@ -21,6 +21,7 @@ const listening = ref(false)
 const audioUrl = ref('')
 let mediaRecorder = null
 let audioChunks = []
+let stream = null
 
 const toggleListening = async () => {
   if (listening.value) {
@@ -33,7 +34,8 @@ const toggleListening = async () => {
 const startRecognition = () => {
   navigator.mediaDevices
     .getUserMedia({ audio: true })
-    .then((stream) => {
+    .then((mediaStream) => {
+      stream = mediaStream // MediaStreamを保存
       listening.value = true
       mediaRecorder = new MediaRecorder(stream)
       audioChunks = []
@@ -62,6 +64,12 @@ const stopRecognition = () => {
   if (mediaRecorder) {
     mediaRecorder.stop()
     listening.value = false
+
+    // MediaStreamのトラックを停止
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop())
+      stream = null
+    }
   }
 }
 
