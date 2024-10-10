@@ -66,7 +66,8 @@ const sendAudio = async (audioBlob) => {
   formData.append('audio', audioBlob, 'recording.wav')
 
   try {
-    const response = await fetch('http://YOUR_BACKEND_URL:5000/process_audio', {
+    // エンドポイントURLを /api/process_audio に変更
+    const response = await fetch('http://YOUR_BACKEND_URL:5000/api/process_audio', {
       method: 'POST',
       body: formData,
     })
