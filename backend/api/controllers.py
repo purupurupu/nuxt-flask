@@ -1,7 +1,4 @@
 from flask import request, jsonify, send_file
-import openai
-from google.cloud import speech_v1p1beta1 as speech
-from google.cloud import texttospeech
 import io
 from .services import speech_to_text, normalize_text, text_to_speech
 
