@@ -1,19 +1,20 @@
 <template>
   <div>
-    <button @click="toggleListening">
-      {{ listening ? '停止' : '音声認識を開始' }}
-    </button>
-    <div v-if="listening">
-      <p>音声を入力中...</p>
-      <!-- 入力状況に応じたUIの変更をここに追加 -->
-    </div>
-    <div v-if="audioUrl">
-      <p>音声データを再生中...</p>
-      <audio :src="audioUrl" controls />
+    <UButton
+      :label="listening ? '停止' : '音声認識を開始'"
+      :color="listening ? 'red' : 'primary'"
+      size="md"
+      @click="toggleListening"
+    />
+
+    <UAlert v-if="listening" class="mt-4" color="info"> 音声を入力中... </UAlert>
+
+    <div v-if="audioUrl" class="mt-4">
+      <UAlert color="success"> 音声データを再生中... </UAlert>
+      <audio :src="audioUrl" controls class="mt-2" />
     </div>
   </div>
 </template>
-
 <script setup>
 import { ref } from 'vue'
 
@@ -106,14 +107,3 @@ const sendAudio = async (audioBlob) => {
 //   audio.play()
 // }
 </script>
-
-<style scoped>
-button {
-  padding: 10px 20px;
-  font-size: 16px;
-}
-p {
-  margin-top: 10px;
-  font-size: 14px;
-}
-</style>
