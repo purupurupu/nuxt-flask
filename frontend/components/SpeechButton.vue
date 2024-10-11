@@ -1,28 +1,16 @@
-<template>
-  <div>
-    <UButton
-      :label="listening ? '停止' : '音声認識を開始'"
-      :color="listening ? 'red' : 'primary'"
-      size="md"
-      @click="toggleListening"
-    />
-
-    <UAlert v-if="listening" class="mt-4" color="info"> 音声を入力中... </UAlert>
-
-    <div v-if="audioUrl" class="mt-4">
-      <UAlert color="success"> 音声データを再生中... </UAlert>
-      <audio :src="audioUrl" controls class="mt-2" />
-    </div>
-  </div>
-</template>
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
+
+interface Response {
+  text: string
+}
 
 const listening = ref(false)
 const audioUrl = ref('')
-let mediaRecorder = null
-let audioChunks = []
-let stream = null
+const responseData = ref<Response | null>(null)
+let mediaRecorder: MediaRecorder | null = null
+let audioChunks: BlobPart[] | undefined = []
+let stream: MediaStream | null = null
 
 const toggleListening = async () => {
   if (listening.value) {
@@ -42,7 +30,7 @@ const startRecognition = () => {
       audioChunks = []
 
       mediaRecorder.ondataavailable = (event) => {
-        audioChunks.push(event.data)
+        audioChunks?.push(event.data)
       }
 
       mediaRecorder.onstop = () => {
@@ -75,7 +63,7 @@ const stopRecognition = () => {
 }
 
 // TODO: GoogleAPI用の実装
-const sendAudio = async (audioBlob) => {
+const sendAudio = async (audioBlob: Blob) => {
   const formData = new FormData()
   formData.append('audio', audioBlob, 'recording.wav')
 
@@ -92,8 +80,8 @@ const sendAudio = async (audioBlob) => {
       return
     }
 
-    const text = await response.json()
-    console.log(text)
+    responseData.value = await response.json()
+    console.log(responseData.value)
     // const blob = await response.blob()
     // audioUrl.value = URL.createObjectURL(blob)
     // playAudio()
@@ -107,3 +95,38 @@ const sendAudio = async (audioBlob) => {
 //   audio.play()
 // }
 </script>
+
+<template>
+  <div>
+    <UContainer
+      :ui="{
+        base: 'mx-auto',
+        padding: 'px-4 sm:px-6 lg:px-8',
+        constrained: 'max-w-7xl',
+      }"
+    >
+      <UButton
+        :label="listening ? '停止' : '音声認識を開始'"
+        :color="listening ? 'red' : 'primary'"
+        size="md"
+        @click="toggleListening"
+      />
+
+      <UAlert
+        v-if="listening"
+        class="mt-4"
+        :ui="{ wrapper: 'w-full' }"
+        color="blue"
+        title="音声を入力中..."
+      />
+
+      <div v-if="audioUrl" class="mt-4">
+        <UAlert color="primary" title="音声データを再生中..." />
+        <audio :src="audioUrl" controls class="mt-2" />
+      </div>
+      <div v-if="responseData?.text" class="mt-4">
+        <UAlert color="white" title="レスポンステキスト" :description="responseData.text" />
+      </div>
+    </UContainer>
+  </div>
+</template>
