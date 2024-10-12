@@ -1,5 +1,25 @@
 from google.cloud import speech, texttospeech
 import openai
+import pyttsx3
+import os
+from threading import Lock
+from contextlib import contextmanager
+
+# グローバル変数としてエンジンを作成し、ロックを使用して同期化
+engine = pyttsx3.init()
+engine_lock = Lock()
+
+
+@contextmanager
+def get_engine():
+    global engine
+    with engine_lock:
+        if engine is None:
+            engine = pyttsx3.init()
+        try:
+            yield engine
+        finally:
+            engine.endLoop()
 
 
 def speech_to_text(audio_content):
@@ -45,3 +65,35 @@ def text_to_speech(text):
     )
 
     return tts_response.audio_content
+
+
+# NOTE: フロントエンドテスト用。GoogleAPIの代わりにpyttsx3を使って音声を生成する
+def text_to_speech_test(text):
+    try:
+        with get_engine() as current_engine:
+            # 音声の設定（日本語の声が利用可能な場合）
+            voices = current_engine.getProperty("voices")
+            japanese_voice = next(
+                (voice for voice in voices if "japanese" in voice.languages), None
+            )
+            if japanese_voice:
+                current_engine.setProperty("voice", japanese_voice.id)
+
+            # 一時ファイル名を生成
+            temp_file = f"temp_{os.getpid()}_{os.urandom(4).hex()}.wav"
+
+            # 音声をファイルに保存
+            current_engine.save_to_file(text, temp_file)
+            current_engine.runAndWait()
+
+            # ファイルを読み込んでバイトデータとして返す
+            with open(temp_file, "rb") as f:
+                audio_data = f.read()
+
+            # 一時ファイルを削除
+            os.remove(temp_file)
+
+            return audio_data
+
+    except Exception as e:
+        raise Exception(f"音声生成中にエラーが発生しました: {str(e)}")

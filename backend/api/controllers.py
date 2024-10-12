@@ -1,6 +1,11 @@
 from flask import request, jsonify, send_file
 import io
-from .services import speech_to_text, normalize_text, text_to_speech
+from .services import (
+    speech_to_text,
+    normalize_text,
+    text_to_speech,
+    text_to_speech_test,
+)
 import speech_recognition as sr
 from pydub import AudioSegment
 
@@ -65,18 +70,35 @@ def process_audio_test_controller():
 
         # 音声をテキストに変換
         text = recognizer.recognize_google(audio_data, language="ja-JP")
+        print(f"認識したテキスト: {text}")
 
-        return jsonify({"text": text}), 200
+        # NOTE: textを返却するテスト用のデバッグコード
+        # return jsonify({"text": text}), 200
+
+        # FIXME: ここでGPTを使って正規化をするフローがある
+        # normalized_text = normalize_text(text)
+
+        # FIXME: pyttsx3を使ってテキストを音声に変換。GoogleAPIの代わりになる
+        audio_output = text_to_speech_test(text)
+
+        return send_file(
+            io.BytesIO(audio_output),
+            mimetype="audio/wav",
+            as_attachment=False,
+            download_name="output.wav",
+        )
 
     except sr.UnknownValueError:
         return jsonify({"error": "音声を認識できませんでした"}), 400
     except sr.RequestError as e:
+        print(f"エラー詳細: {str(e)}")
         return (
-            jsonify({"error": f"音声認識サービスにアクセスできませんでした: {e}"}),
+            jsonify({"error": f"音声認識サービスにアクセスできませんでした"}),
             500,
         )
     except Exception as e:
-        return jsonify({"error": f"予期せぬエラーが発生しました: {e}"}), 500
+        print(f"エラー詳細: {str(e)}")
+        return jsonify({"error": f"予期せぬエラーが発生しました"}), 500
 
 
 def get_nuxt_info_controller():

@@ -80,20 +80,22 @@ const sendAudio = async (audioBlob: Blob) => {
       return
     }
 
-    responseData.value = await response.json()
-    console.log(responseData.value)
-    // const blob = await response.blob()
-    // audioUrl.value = URL.createObjectURL(blob)
-    // playAudio()
+    // NOTE: テスト用のデバッグコード
+    // responseData.value = await response.json()
+    // console.log(responseData.value)
+
+    const blob = await response.blob()
+    audioUrl.value = URL.createObjectURL(blob)
+    playAudio()
   } catch (error) {
     console.error('音声送信エラー：', error)
   }
 }
 
-// const playAudio = () => {
-//   const audio = new Audio(audioUrl.value)
-//   audio.play()
-// }
+const playAudio = () => {
+  const audio = new Audio(audioUrl.value)
+  audio.play()
+}
 </script>
 
 <template>
