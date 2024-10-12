@@ -38,7 +38,7 @@ const startRecognition = () => {
         // for debug
         // audioUrl.value = URL.createObjectURL(audioBlob)
 
-        // TODO: GoogleAPI用の実装
+        // GoogleAPI用の実装
         sendAudio(audioBlob)
       }
 
@@ -62,14 +62,14 @@ const stopRecognition = () => {
   }
 }
 
-// TODO: GoogleAPI用の実装
+// GoogleAPI用の実装
+// バイナリデータとして音声を送信
 const sendAudio = async (audioBlob: Blob) => {
   const formData = new FormData()
   formData.append('audio', audioBlob, 'recording.wav')
 
   try {
-    // エンドポイントURLを /api/process_audio に変更
-    const response = await fetch('http://localhost:5050/api/process_audio_test', {
+    const response = await fetch('http://localhost:5050/api/process_audio', {
       method: 'POST',
       body: formData,
     })
@@ -80,20 +80,26 @@ const sendAudio = async (audioBlob: Blob) => {
       return
     }
 
-    responseData.value = await response.json()
-    console.log(responseData.value)
-    // const blob = await response.blob()
-    // audioUrl.value = URL.createObjectURL(blob)
-    // playAudio()
+    // レスポンスが音声データ（Blob）の場合
+    const blob = await response.blob()
+    const url = URL.createObjectURL(blob)
+    audioUrl.value = url
+    responseData.value = { text: '音声が正常に処理されました。' } // 必要に応じてテキストを追加
+
+    playAudio()
   } catch (error) {
     console.error('音声送信エラー：', error)
   }
 }
 
-// const playAudio = () => {
-//   const audio = new Audio(audioUrl.value)
-//   audio.play()
-// }
+const playAudio = () => {
+  if (audioUrl.value) {
+    const audio = new Audio(audioUrl.value)
+    audio.play().catch((error) => {
+      console.error('音声再生エラー：', error)
+    })
+  }
+}
 </script>
 
 <template>
@@ -107,9 +113,9 @@ const sendAudio = async (audioBlob: Blob) => {
 
     <UAlert v-if="listening" class="mt-4 text-center" color="blue" title="音声を入力中..." />
 
-    <div v-if="audioUrl" class="mt-4">
+    <div v-if="responseData" class="mt-4">
       <UAlert color="primary" title="音声データを再生中..." />
-      <audio :src="audioUrl" controls class="mt-2" />
+      <audio v-if="audioUrl" :src="audioUrl" controls class="mt-2" />
     </div>
     <UAlert
       v-if="responseData?.text"
@@ -118,6 +124,5 @@ const sendAudio = async (audioBlob: Blob) => {
       title="レスポンス"
       :description="responseData.text"
     />
-    <!-- </div> -->
   </div>
 </template>
