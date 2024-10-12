@@ -97,36 +97,27 @@ const sendAudio = async (audioBlob: Blob) => {
 </script>
 
 <template>
-  <div>
-    <UContainer
-      :ui="{
-        base: 'mx-auto',
-        padding: 'px-4 sm:px-6 lg:px-8',
-        constrained: 'max-w-7xl',
-      }"
-    >
-      <UButton
-        :label="listening ? '停止' : '音声認識を開始'"
-        :color="listening ? 'red' : 'primary'"
-        size="md"
-        @click="toggleListening"
-      />
+  <div class="flex flex-col items-center w-full">
+    <UButton
+      :label="listening ? '停止' : '音声認識を開始'"
+      :color="listening ? 'red' : 'primary'"
+      size="md"
+      @click="toggleListening"
+    />
 
-      <UAlert
-        v-if="listening"
-        class="mt-4"
-        :ui="{ wrapper: 'w-full' }"
-        color="blue"
-        title="音声を入力中..."
-      />
+    <UAlert v-if="listening" class="mt-4 text-center" color="blue" title="音声を入力中..." />
 
-      <div v-if="audioUrl" class="mt-4">
-        <UAlert color="primary" title="音声データを再生中..." />
-        <audio :src="audioUrl" controls class="mt-2" />
-      </div>
-      <div v-if="responseData?.text" class="mt-4">
-        <UAlert color="white" title="レスポンステキスト" :description="responseData.text" />
-      </div>
-    </UContainer>
+    <div v-if="audioUrl" class="mt-4">
+      <UAlert color="primary" title="音声データを再生中..." />
+      <audio :src="audioUrl" controls class="mt-2" />
+    </div>
+    <UAlert
+      v-if="responseData?.text"
+      class="mt-4"
+      color="white"
+      title="レスポンス"
+      :description="responseData.text"
+    />
+    <!-- </div> -->
   </div>
 </template>
