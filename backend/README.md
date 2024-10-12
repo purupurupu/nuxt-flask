@@ -23,3 +23,4 @@
 
 - `app.py`: メインアプリケーションファイル
 - `requirements.txt`: 依存関係リスト
+- `GoogleCloud`: 認証はjsonを.envに書く。

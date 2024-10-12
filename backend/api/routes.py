@@ -2,7 +2,6 @@ from flask import Blueprint, jsonify
 
 from .controllers import (
     process_audio_controller,
-    process_audio_test_controller,
     get_nuxt_info_controller,
 )
 
@@ -19,9 +18,9 @@ def process_audio():
     return process_audio_controller()
 
 
-@api_bp.route("/process_audio_test", methods=["POST"])
-def process_audio_test():
-    return process_audio_test_controller()
+# @api_bp.route("/process_audio_test", methods=["POST"])
+# def process_audio_test():
+#     return process_audio_test_controller()
 
 
 @api_bp.route("/nuxt-info", methods=["GET"])
