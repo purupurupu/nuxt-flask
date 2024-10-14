@@ -2,11 +2,9 @@ import io
 import wave
 from google.cloud import speech, texttospeech
 import openai
-import logging
+from utils import logger  # インポート文を修正
 
 from auth import clients
-
-logger = logging.getLogger(__name__)
 
 
 def speech_to_text(audio_content):
@@ -31,15 +29,17 @@ def speech_to_text(audio_content):
 
     try:
         response = speech_client.recognize(config=config, audio=audio)
-        logger.info(f"API応答全体: {response}")
+        logger.debug(f"API応答全体: {response}")
 
         if not response.results:
             logger.warning("音声認識結果がありません。")
             return None
 
-        return response.results[0].alternatives[0].transcript
+        transcript = response.results[0].alternatives[0].transcript
+        logger.info(f"認識されたテキスト: {transcript}")
+        return transcript
     except Exception as e:
-        logger.error(f"音声認識中にエラーが発生しました: {e}")
+        logger.error(f"音声認識中にエラーが発生しました: {e}", exc_info=True)
         return None
 
 
@@ -56,7 +56,6 @@ def normalize_text(text):
 
 
 def text_to_speech(text):
-    # 認証済みの Text-to-Speech クライアントを使用
     tts_client = clients["tts_client"]
     synthesis_input = texttospeech.SynthesisInput(text=text)
     voice = texttospeech.VoiceSelectionParams(
@@ -74,5 +73,5 @@ def text_to_speech(text):
         logger.info("Text-to-Speech 変換が成功しました")
         return tts_response.audio_content
     except Exception as e:
-        logger.error(f"Text-to-Speech 変換中にエラーが発生しました: {e}")
+        logger.error(f"Text-to-Speech 変換中にエラーが発生しました: {e}", exc_info=True)
         return None
